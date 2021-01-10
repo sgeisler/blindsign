@@ -11,7 +11,7 @@ use curve25519_dalek::{
     scalar::Scalar,
 };
 use digest::Digest;
-use rand::OsRng;
+use rand::rngs::OsRng;
 use signature::UnblindedSigData;
 use typenum::U64;
 use Error::{WiredRistrettoPointMalformed, WiredScalarMalformed};
@@ -67,7 +67,7 @@ impl BlindRequest {
     where
         H: Digest<OutputSize = U64> + Default,
     {
-        initiate::<H, &[u8; 32]>(rp, Scalar::random(&mut OsRng::new()?).as_bytes())
+        initiate::<H, &[u8; 32]>(rp, Scalar::random(&mut OsRng).as_bytes())
     }
 
     /// The same as new, but allows for passing in a specific message value 'm'
@@ -123,7 +123,7 @@ where
     H: Digest<OutputSize = U64> + Default,
     M: AsRef<[u8]>,
 {
-    let mut rng = OsRng::new()?;
+    let mut rng = OsRng;
     // Load the wired R' value into RistrettoPoint form, error if the wired
     // form was malformed.
     let rp = CompressedRistretto(*rp)
@@ -165,8 +165,8 @@ where
     H: Digest<OutputSize = U64> + Default,
 {
     let mut hasher = H::default();
-    hasher.input(r.compress().as_bytes());
-    hasher.input(m);
+    hasher.update(r.compress().as_bytes());
+    hasher.update(m);
     Scalar::from_hash(hasher)
 }
 
